@@ -1,5 +1,6 @@
 package ua.procamp;
 
+import lombok.extern.slf4j.Slf4j;
 import ua.procamp.dao.ProductDao;
 import ua.procamp.dao.ProductDaoImpl;
 import ua.procamp.exception.DaoOperationException;
@@ -23,6 +24,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
+@Slf4j
 @RunWith(JUnit4.class)
 public class ProductDaoTest {
     private static ProductDao productDao;
@@ -67,6 +69,7 @@ public class ProductDaoTest {
 
         int productsCountBeforeInsert = productDao.findAll().size();
         productDao.save(fanta);
+        log.info("fanta={}", fanta);
         List<Product> products = productDao.findAll();
 
         assertNotNull(fanta.getId());
@@ -109,7 +112,10 @@ public class ProductDaoTest {
         List<Product> oldProducts = productDao.findAll();
         newProducts.forEach(productDao::save);
 
+        log.info("new={},  old={}", newProducts, oldProducts);
+
         List<Product> products = productDao.findAll();
+        log.info("products={}", products);
 
         assertTrue(products.containsAll(newProducts));
         assertTrue(products.containsAll(oldProducts));
@@ -176,6 +182,8 @@ public class ProductDaoTest {
         productDao.update(testProduct);
         List<Product> products = productDao.findAll();
         Product updatedProduct = productDao.findOne(testProduct.getId());
+
+        log.info("test={}, upd={}", testProduct, updatedProduct);
 
         assertEquals(productsBeforeUpdate.size(), products.size());
         assertTrue(completelyEquals(testProduct, updatedProduct));

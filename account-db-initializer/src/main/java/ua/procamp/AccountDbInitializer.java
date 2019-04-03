@@ -1,7 +1,11 @@
 package ua.procamp;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
+
+import static ua.procamp.SqlQueries.*;
 
 /**
  * {@link AccountDbInitializer} provides an API that allow to initialize (create) an Account table in the database
@@ -12,6 +16,7 @@ public class AccountDbInitializer {
     public AccountDbInitializer(DataSource dataSource) {
         this.dataSource = dataSource;
     }
+
 
     /**
      * Creates an {@code account} table. That table has a identifier column {@code id} with type {@code bigint}.
@@ -28,6 +33,10 @@ public class AccountDbInitializer {
      * @throws SQLException
      */
     public void init() throws SQLException {
-        throw new UnsupportedOperationException("It's your job to make it work!"); // todo
+        try (Connection connection = dataSource.getConnection()) {
+            Statement statement = connection.createStatement();
+            statement.execute(CREATE_TABLE_QUERY);
+            connection.commit();
+        }
     }
 }
