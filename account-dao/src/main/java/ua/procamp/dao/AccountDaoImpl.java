@@ -1,45 +1,54 @@
 package ua.procamp.dao;
 
 import ua.procamp.model.Account;
+import ua.procamp.util.OperationWrapper;
 
 import javax.persistence.EntityManagerFactory;
 import java.util.List;
 
 public class AccountDaoImpl implements AccountDao {
-    private EntityManagerFactory emf;
+
+    private final OperationWrapper operationWrapper;
 
     public AccountDaoImpl(EntityManagerFactory emf) {
-        this.emf = emf;
+        this.operationWrapper = new OperationWrapper(emf);
     }
 
     @Override
     public void save(Account account) {
-        throw new UnsupportedOperationException("I don't wanna work without implementation!"); // todo
+        this.operationWrapper.handleOperation(em -> em.persist(account));
     }
 
     @Override
     public Account findById(Long id) {
-        throw new UnsupportedOperationException("I don't wanna work without implementation!"); // todo
+        return this.operationWrapper.handleOperationReturningResult(em ->
+                em.createQuery("select a from Account a where a.id = :id", Account.class)
+                        .setParameter("id", id).getSingleResult());
     }
 
     @Override
     public Account findByEmail(String email) {
-        throw new UnsupportedOperationException("I don't wanna work without implementation!"); // todo
+        return this.operationWrapper.handleOperationReturningResult(em ->
+                em.createQuery("select a from Account a where a.email = :email", Account.class)
+                        .setParameter("email", email).getSingleResult());
     }
 
     @Override
     public List<Account> findAll() {
-        throw new UnsupportedOperationException("I don't wanna work without implementation!"); // todo
+        return this.operationWrapper.handleOperationReturningResult(em ->
+                em.createQuery("select a from Account a", Account.class).getResultList());
     }
 
     @Override
     public void update(Account account) {
-        throw new UnsupportedOperationException("I don't wanna work without implementation!"); // todo
+        this.operationWrapper.handleOperation(em -> em.merge(account));
     }
 
     @Override
     public void remove(Account account) {
-        throw new UnsupportedOperationException("I don't wanna work without implementation!"); // todo
+        this.operationWrapper.handleOperation(em -> {
+            Account merged = em.merge(account);
+            em.remove(merged);
+        });
     }
 }
-
