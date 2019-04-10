@@ -1,12 +1,19 @@
 package ua.procamp.model;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicUpdate;
 
-import javax.persistence.CascadeType;
+import javax.persistence.*;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
+
+import static javax.persistence.CascadeType.*;
+import static javax.persistence.GenerationType.*;
+import static lombok.AccessLevel.*;
 
 /**
  * todo:
@@ -34,17 +41,47 @@ import java.util.Set;
 @NoArgsConstructor
 @Getter
 @Setter
+@Entity
+@Table(name = "author")
 public class Author {
+
+    @Id
+    @GeneratedValue
     private Long id;
+
+    @Column(nullable = false)
     private String firstName;
+
+    @Column(nullable = false)
     private String lastName;
-    private Set<Book> books;
+
+    @Setter(PRIVATE)
+    @ManyToMany(cascade = {PERSIST, MERGE})
+    @JoinTable(name = "author_book",
+            joinColumns = @JoinColumn(name = "author_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "book_id", referencedColumnName = "id"))
+    private Set<Book> books = new HashSet<>();
 
     public void addBook(Book book) {
-        throw new UnsupportedOperationException("Are you kidding me?");
+        this.books.add(book);
+        book.getAuthors().add(this);
     }
 
     public void removeBook(Book book) {
-        throw new UnsupportedOperationException("Are you kidding me?");
+        this.books.remove(book);
+        book.getAuthors().remove(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Author author = (Author) o;
+        return id.equals(author.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return 31;
     }
 }
