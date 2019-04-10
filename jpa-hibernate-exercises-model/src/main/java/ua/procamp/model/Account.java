@@ -6,6 +6,8 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @Getter
@@ -25,7 +27,7 @@ public class Account {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @Column(name = "birthday", nullable = false)
@@ -40,4 +42,18 @@ public class Account {
 
     @Column(name = "balance")
     private BigDecimal balance = BigDecimal.ZERO.setScale(2);
+
+    @Setter(AccessLevel.PRIVATE)
+    @OneToMany(mappedBy = "holder", fetch = FetchType.EAGER)
+    private List<Card> card = new ArrayList<>();
+
+    public void addCard(Card card) {
+        getCard().add(card);
+        card.setHolder(this);
+    }
+
+    public void removeCard(Card card) {
+        getCard().remove(card);
+        card.setHolder(null);
+    }
 }

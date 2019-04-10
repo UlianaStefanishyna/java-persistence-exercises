@@ -1,6 +1,8 @@
 package ua.procamp;
 
 import ua.procamp.model.Account;
+import ua.procamp.model.Card;
+import ua.procamp.util.EntityManagerUtil;
 import ua.procamp.util.TestDataGenerator;
 
 import javax.persistence.EntityManager;
@@ -11,8 +13,41 @@ public class EntityManagerExample {
     public static void main(String[] args) {
 
         EntityManagerFactory entityManagerFactory = Persistence
-                .createEntityManagerFactory("SingleAccountEntityH2");
+                .createEntityManagerFactory("SingleAccountEntityPostgres");
 
+        EntityManagerUtil entityManagerUtil = new EntityManagerUtil(entityManagerFactory);
+
+        Account account = TestDataGenerator.generateAccount();
+        entityManagerUtil.performWithinTx(em -> {
+
+            em.persist(account);
+
+            Card card = new Card();
+            card.setName("Monobank");
+            card.setHolder(account);
+            em.persist(card);
+
+            Card card2 = new Card();
+            card2.setName("privat");
+            card2.setHolder(account);
+            em.persist(card2);
+        });
+
+        entityManagerUtil.performWithinTx(entityManager -> {
+            Account singleResult = entityManager
+                    .createQuery("select a from Account a left join fetch a.card", Account.class)
+                    .getSingleResult();
+
+            Account found = entityManager.find(Account.class, account.getId());
+            System.out.println("I AM HERE");
+            found.getCard().stream()
+                    .forEach(card -> System.out.println(card.getName()));
+        });
+
+        entityManagerFactory.close();
+    }
+
+    private static void test(EntityManagerFactory entityManagerFactory) {
         EntityManager entityManager = entityManagerFactory.createEntityManager(); // start session
 
         entityManager.getTransaction().begin();
@@ -42,7 +77,5 @@ public class EntityManagerExample {
             entityManager.close(); // close session - close physical connection to db
             // account is detached
         }
-
-        entityManagerFactory.close();
     }
 }

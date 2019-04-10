@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.Optional.*;
 import static ua.procamp.dao.SqlQueries.*;
 
 public class ProductDaoImpl implements ProductDao {
@@ -40,7 +41,7 @@ public class ProductDaoImpl implements ProductDao {
             PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
             preparedStatement.setLong(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
-            return getResult(resultSet).stream().findAny().orElseGet(Product::new);
+            return createResult(resultSet).stream().findAny().orElseGet(Product::new);
         } catch (SQLException e) {
             throw new DaoOperationException("Product with id=" + id + " is not found");
         }
@@ -65,7 +66,7 @@ public class ProductDaoImpl implements ProductDao {
         preparedStatement.setDate(4, Date.valueOf(product.getExpirationDate()));
     }
 
-    private List<Product> getResult(ResultSet resultSet) throws SQLException {
+    private List<Product> createResult(ResultSet resultSet) throws SQLException {
 
         List<Product> resultList = new ArrayList<>();
 
@@ -109,8 +110,8 @@ public class ProductDaoImpl implements ProductDao {
                     .prepareStatement(sqlQuery, PreparedStatement.RETURN_GENERATED_KEYS);
             setParamsToPreparedStatement(preparedStatement, product);
 
-            preparedStatement.setTimestamp(5, Optional.ofNullable(product.getCreationTime())
-                    .map(Timestamp::valueOf).orElseGet(() -> Timestamp.valueOf(LocalDateTime.now())));
+            Timestamp timestamp = createTimestamp(product.getCreationTime());
+            preparedStatement.setTimestamp(5, timestamp);
 
             validateAffectedRows(preparedStatement.executeUpdate());
 
@@ -121,11 +122,17 @@ public class ProductDaoImpl implements ProductDao {
         }
     }
 
+    private Timestamp createTimestamp(LocalDateTime localDateTime) {
+        return ofNullable(localDateTime)
+                .map(Timestamp::valueOf)
+                .orElseGet(() -> Timestamp.valueOf(LocalDateTime.now()));
+    }
+
     private List<Product> handleOperationsWithReturningResult(String sqlQuery) {
         try (Connection connection = this.dataSource.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
             ResultSet resultSet = preparedStatement.executeQuery();
-            return getResult(resultSet);
+            return createResult(resultSet);
         } catch (SQLException e) {
             throw new DaoOperationException("Sql exception occurred");
         }
